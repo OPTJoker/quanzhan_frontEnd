@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input, Button, Space, Typography } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, CompositionEvent } from 'react';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -19,6 +19,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [isComposing, setIsComposing] = useState(false); // 中文输入法组合状态
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
@@ -40,12 +41,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       if (e.shiftKey) {
         // Shift+Enter 换行
         return;
-      } else {
-        // Enter 发送
+      } else if (!isComposing) {
+        // 只有在非组合状态下才发送
         e.preventDefault();
         handleSend();
       }
     }
+  };
+
+  // 中文输入法组合事件处理
+  const handleCompositionStart = (e: CompositionEvent<HTMLTextAreaElement>) => {
+    setIsComposing(true);
+  };
+  const handleCompositionEnd = (e: CompositionEvent<HTMLTextAreaElement>) => {
+    setIsComposing(false);
   };
 
   const isDisabled = disabled || sending || !message.trim();
@@ -61,6 +70,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
           placeholder={placeholder}
           disabled={disabled || sending}
           autoSize={{ minRows: 1, maxRows: 4 }}
@@ -109,3 +120,4 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     </div>
   );
 };
+    
